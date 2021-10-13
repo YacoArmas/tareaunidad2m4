@@ -4,15 +4,10 @@ var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 
-require("dotenv").config();
+var session = require("express-session");
 
-var indexRouter = require("./routes/index");
-// var usersRouter = require("./routes/users");
-var historiaRouter = require("./routes/historia");
-var produccionesRouter = require("./routes/producciones");
-var galeriaRouter = require("./routes/galeria");
-var novedadesRouter = require("./routes/novedades");
-var contactoRouter = require("./routes/contacto");
+// var indexRouter = require('./routes/index');
+// var usersRouter = require('./routes/users');
 
 var app = express();
 
@@ -26,17 +21,38 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
-app.use("/", indexRouter);
-// app.use("/users", usersRouter);
-app.use("/historia", historiaRouter);
-app.use("/producciones", produccionesRouter);
-app.use("/galeria", galeriaRouter);
-app.use("/novedades", novedadesRouter);
-app.use("/contacto", contactoRouter);
+app.use(
+  session({
+    secret: "cursoprofessionalwebmaster",
+    resave: false,
+    saveUninitialized: true,
+  })
+);
 
-app.get("/test", function (req, res) {
-  res.send("Hola prueba 1");
+app.get("/", function (req, res) {
+  var conocido = Boolean(req.session.nombre);
+
+  res.render("index", {
+    title: "Sesiones en Express.js",
+    conocido: conocido,
+    nombre: req.session.nombre,
+  });
 });
+
+app.post("/ingresar", function (req, res) {
+  if (req.body.nombre) {
+    req.session.nombre = req.body.nombre;
+  }
+  res.redirect("/");
+});
+
+app.get("/salir", function (req, res) {
+  req.session.destroy();
+  res.redirect("/");
+});
+
+// app.use('/', indexRouter);
+// app.use('/users', usersRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
